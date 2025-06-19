@@ -1,0 +1,50 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    // El plugin de Flutter debe aplicarse después de los plugins de Android y Kotlin.
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+android {
+    namespace = "com.example.facelab"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion "27.0.12077973"
+    //ndkVersion "25.2.9519653"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    defaultConfig {
+        // Especifica tu propio Application ID único
+        applicationId "com.miempresa.identity"
+
+        // Configuración mínima, objetivo y versiones de compilación
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    buildTypes {
+        release {
+            // Configuración de firma para la versión de producción.
+            // Cambia esto por la configuración de firma para tu versión de producción.
+            signingConfig = signingConfigs.debug
+
+            // Habilita la ofuscación de código para mejorar la seguridad del APK en producción
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}

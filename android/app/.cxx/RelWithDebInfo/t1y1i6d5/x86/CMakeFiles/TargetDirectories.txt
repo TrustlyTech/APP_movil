@@ -1,0 +1,2 @@
+E:/TP1-Proyectos/facelab/android/app/.cxx/RelWithDebInfo/t1y1i6d5/x86/CMakeFiles/edit_cache.dir
+E:/TP1-Proyectos/facelab/android/app/.cxx/RelWithDebInfo/t1y1i6d5/x86/CMakeFiles/rebuild_cache.dir

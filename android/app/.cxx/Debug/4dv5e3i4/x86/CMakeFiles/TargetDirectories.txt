@@ -1,0 +1,2 @@
+E:/TP1-Proyectos/facelab/android/app/.cxx/Debug/4dv5e3i4/x86/CMakeFiles/edit_cache.dir
+E:/TP1-Proyectos/facelab/android/app/.cxx/Debug/4dv5e3i4/x86/CMakeFiles/rebuild_cache.dir
