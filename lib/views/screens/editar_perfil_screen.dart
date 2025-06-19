@@ -163,7 +163,7 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
                       _buildTextField(nombreController, 'Nombre'),
                       _buildTextField(apellidosController, 'Apellidos'),
                       _buildTextField(correoController, 'Correo', keyboardType: TextInputType.emailAddress),
-                      _buildTextField(ciudadController, 'Ciudad'),
+                      _buildTextField(ciudadController, 'Departamento'),
                       _buildTextField(paisController, 'País'),
                       _buildTextField(celularController, 'Celular', keyboardType: TextInputType.phone),
                       _buildTextField(

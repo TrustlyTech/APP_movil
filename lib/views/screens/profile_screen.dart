@@ -98,7 +98,7 @@ class ProfileScreen extends StatelessWidget {
                       _buildInfo('Nombre:', usuario['nombre']),
                       _buildInfo('Apellidos:', usuario['apellidos']),
                       _buildInfo('Correo:', usuario['correo']),
-                      _buildInfo('Ciudad:', usuario['ciudad']),
+                      _buildInfo('Departamento:', usuario['ciudad']),
                       _buildInfo('País:', usuario['pais']),
                       _buildInfo('Celular:', usuario['celular']),
                       _buildInfo('Rol:', usuario['rol'] ?? 'usuario'),
@@ -116,6 +116,20 @@ class ProfileScreen extends StatelessWidget {
                             );
                           },
                           child: const Text('Editar Perfil', style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Center(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          ),
+                          onPressed: () async {
+                            await authService.logout();
+                            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                          },
+                          child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.white)),
                         ),
                       ),
                     ],

@@ -15,6 +15,11 @@ class AuthService {
   // Getter público
   Map<String, dynamic>? get usuarioAutenticado => _usuarioAutenticado;
 
+  // Setter (opcional si necesitas modificar manualmente desde otros lados)
+  set usuarioAutenticado(Map<String, dynamic>? usuario) {
+    _usuarioAutenticado = usuario;
+  }
+
   // Registro de usuario
   Future<Map<String, dynamic>> registerUser({
     required String nombre,
@@ -88,5 +93,14 @@ class AuthService {
     } catch (e) {
       throw Exception('Error en login: $e');
     }
+  }
+
+  // Cierre de sesión
+  Future<void> logout() async {
+    _usuarioAutenticado = null;
+
+    // Si usas almacenamiento persistente, límpialo aquí:
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.clear();
   }
 }
