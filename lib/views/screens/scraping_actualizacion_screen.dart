@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/scraping_actualizacion.dart';
 import '../../services/scraping_actualizacion_service.dart';
+import '../widgets/ayuda_dialog.dart';
 
 class ScrapingActualizacionScreen extends StatefulWidget {
   @override
@@ -27,9 +28,7 @@ class _ScrapingActualizacionScreenState extends State<ScrapingActualizacionScree
 
     return Theme(
       data: Theme.of(context).copyWith(
-        textSelectionTheme: const TextSelectionThemeData(
-          cursorColor: Colors.black,
-        ),
+        textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.black),
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -49,6 +48,23 @@ class _ScrapingActualizacionScreenState extends State<ScrapingActualizacionScree
                     const Text(
                       "Historial de Scraping",
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    Spacer(),
+                    IconButton(
+                      icon: Icon(Icons.help_outline, color: Colors.black),
+                      onPressed: () {
+                        AyudaDialog.mostrar(
+                          context: context,
+                          titulo: 'Ayuda - Historial de Scraping',
+                          mensaje: '''Esta pantalla muestra un registro cronológico de las actualizaciones realizadas mediante scraping.
+
+Cada actualización indica el estado del scraping y la fecha exacta en que se ejecutó.
+
+• Si ves estados como "Exitoso", "Fallido" u "Cancelado", estos reflejan el resultado de la ejecución del proceso automático de recolección de datos.
+
+Este historial te permite monitorear si el sistema está funcionando correctamente o si hubo problemas en alguna ejecución.''',
+                        );
+                      },
                     ),
                   ],
                 ),

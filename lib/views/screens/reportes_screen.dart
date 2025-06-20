@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/reporte_model.dart';
 import '../../services/reporte_service.dart';
+import '../widgets/ayuda_dialog.dart';
 
 class ListaReportesScreen extends StatefulWidget {
   final int usuarioId;
@@ -83,6 +84,26 @@ class _ListaReportesScreenState extends State<ListaReportesScreen> {
             ],
           ),
           leading: BackButton(color: Colors.black),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.help_outline, color: Colors.black),
+              onPressed: () {
+                AyudaDialog.mostrar(
+                  context: context,
+                  titulo: 'Ayuda - Lista de Reportes',
+                  mensaje: '''En esta pantalla puedes visualizar todos los reportes que has realizado dentro de la aplicación.
+
+Cada reporte muestra el nombre, la imagen y la recompensa asociada a la persona requisitoriada que identificaste mediante Identity.
+
+• Pulsa el botón “Denunciar” para comunicarte con la línea gratuita del Mininter (0800-40-007) y brindar más información sobre el caso.
+
+• Si el reporte ya fue atendido o deseas retirarlo por alguna razón, puedes usar el botón “Eliminar”.
+
+Tu colaboración es fundamental para apoyar la seguridad ciudadana y ayudar en la captura de personas en el Programa de Recompensas del Mininter.''',
+                );
+              },
+            )
+          ],
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -147,7 +168,7 @@ class _ListaReportesScreenState extends State<ListaReportesScreen> {
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                     ),
-                                    child: Text('Reportar'),
+                                    child: Text('Denunciar'),
                                   ),
                                   SizedBox(height: 8),
                                   ElevatedButton(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../models/estadistica_model.dart';
 import '../../services/estadisticas_service.dart';
+import '../widgets/ayuda_dialog.dart';
 
 class EstadisticasScreen extends StatefulWidget {
   @override
@@ -44,7 +45,7 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
 
     return Theme(
       data: Theme.of(context).copyWith(
-        textSelectionTheme: TextSelectionThemeData(cursorColor: Colors.black),
+        textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.black),
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -66,7 +67,30 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
                       "Estadísticas",
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
-                    const Spacer(flex: 2),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.help_outline, color: Colors.black),
+                      onPressed: () {
+                        AyudaDialog.mostrar(
+                          context: context,
+                          titulo: 'Ayuda - Estadísticas',
+                          mensaje: '''
+En esta vista puedes ver un resumen gráfico de la actividad en Identity:
+
+📈 Denuncias por Mes:
+Muestra la evolución de la cantidad de denuncias registradas por mes. Útil para detectar patrones, picos o anomalías en la actividad.
+
+📊 Denuncias por Departamento:
+Indica en qué regiones del país se han detectado más personas incluidas en el programa de recompensas. Útil para reconocer zonas críticas.
+
+🥇 Top Requisitoriados:
+Muestra a las 5 personas más denunciadas por los usuarios a través de Identity. Esta sección destaca a los requisitoriados con mayor número de denuncias.
+
+Este apartado nos sirve para evaluar el impacto de la app y entender el comportamiento de las Denuncias.
+                          ''',
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -95,7 +119,7 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
                                         getTitlesWidget: (value, _) {
                                           int idx = value.toInt();
                                           if (idx < 0 || idx >= _denuncias.length) return const SizedBox();
-                                          return Text(_denuncias[idx].periodo.split(' ')[0], style: TextStyle(fontSize: 10));
+                                          return Text(_denuncias[idx].periodo.split(' ')[0], style: const TextStyle(fontSize: 10));
                                         },
                                       ),
                                     ),
@@ -124,7 +148,7 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
                               ),
                             ),
                             const SizedBox(height: 24),
-                            Text('📊 Denuncias por Ciudad', style: Theme.of(context).textTheme.titleMedium),
+                            Text('📊 Denuncias por Departamento', style: Theme.of(context).textTheme.titleMedium),
                             const SizedBox(height: 10),
                             SizedBox(
                               height: 200,
@@ -152,7 +176,7 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
                                         getTitlesWidget: (value, _) {
                                           int idx = value.toInt();
                                           if (idx < 0 || idx >= _localizaciones.length) return const SizedBox();
-                                          return Text(_localizaciones[idx].nombre, style: TextStyle(fontSize: 10));
+                                          return Text(_localizaciones[idx].nombre, style: const TextStyle(fontSize: 10));
                                         },
                                       ),
                                     ),

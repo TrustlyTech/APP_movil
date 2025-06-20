@@ -161,7 +161,7 @@ class IdentifiedPersonScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(24)),
                   padding: EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: Text('Reportar'),
+                child: Text('Denunciar'),
               ),
             ),
             SizedBox(height: 12),

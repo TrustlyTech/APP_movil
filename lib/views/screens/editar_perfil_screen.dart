@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../services/usuario_service.dart';
 
 class EditarPerfilScreen extends StatefulWidget {
@@ -14,13 +15,21 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
   late TextEditingController nombreController;
   late TextEditingController apellidosController;
   late TextEditingController correoController;
-  late TextEditingController ciudadController;
-  late TextEditingController paisController;
   late TextEditingController celularController;
   late TextEditingController contrasenaController;
   late TextEditingController confirmarContrasenaController;
 
+  final String _selectedCountry = 'Perú';
+  String? _selectedDepartamento;
+
   bool _isLoading = false;
+
+  final List<String> _departamentosPeru = [
+    'Amazonas', 'Áncash', 'Apurímac', 'Arequipa', 'Ayacucho', 'Cajamarca',
+    'Callao', 'Cusco', 'Huancavelica', 'Huánuco', 'Ica', 'Junín', 'La Libertad',
+    'Lambayeque', 'Lima', 'Loreto', 'Madre de Dios', 'Moquegua', 'Pasco',
+    'Piura', 'Puno', 'San Martín', 'Tacna', 'Tumbes', 'Ucayali',
+  ];
 
   @override
   void initState() {
@@ -28,11 +37,10 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
     nombreController = TextEditingController(text: widget.usuario['nombre']);
     apellidosController = TextEditingController(text: widget.usuario['apellidos']);
     correoController = TextEditingController(text: widget.usuario['correo']);
-    ciudadController = TextEditingController(text: widget.usuario['ciudad'] ?? '');
-    paisController = TextEditingController(text: widget.usuario['pais'] ?? '');
-    celularController = TextEditingController(text: widget.usuario['celular'] ?? '');
+    celularController = TextEditingController(text: widget.usuario['celular']);
     contrasenaController = TextEditingController();
     confirmarContrasenaController = TextEditingController();
+    _selectedDepartamento = widget.usuario['ciudad'];
   }
 
   @override
@@ -40,8 +48,6 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
     nombreController.dispose();
     apellidosController.dispose();
     correoController.dispose();
-    ciudadController.dispose();
-    paisController.dispose();
     celularController.dispose();
     contrasenaController.dispose();
     confirmarContrasenaController.dispose();
@@ -49,45 +55,46 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
   }
 
   void _guardarCambios() async {
-    if (_formKey.currentState!.validate()) {
-      final data = {
-        "nombre": nombreController.text,
-        "apellidos": apellidosController.text,
-        "correo": correoController.text,
-        "ciudad": ciudadController.text,
-        "pais": paisController.text,
-        "celular": celularController.text,
-      };
-      if (contrasenaController.text.isNotEmpty) {
-        data['contrasena'] = contrasenaController.text;
-      }
+    final email = correoController.text.trim();
+    final phone = celularController.text.trim();
+    final emailValid = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email);
+    final phoneValid = RegExp(r"^9\d{8}$").hasMatch(phone);
 
-      setState(() => _isLoading = true);
-      final exito = await UsuarioService().actualizarUsuario(widget.usuario['id'], data);
-      setState(() => _isLoading = false);
+    if (!_formKey.currentState!.validate() || _selectedDepartamento == null || !emailValid || !phoneValid) {
+      String errorMessage = 'Completa todos los campos correctamente';
+      if (!emailValid) errorMessage = 'Correo inválido';
+      if (!phoneValid) errorMessage = 'Celular inválido (debe empezar con 9 y tener 9 dígitos)';
 
-      if (exito) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Datos actualizados con éxito'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.only(bottom: 20, left: 20, right: 20),
-            duration: Duration(milliseconds: 800),
-          ),
-        );
-        await Future.delayed(Duration(milliseconds: 500));
-        Navigator.pop(context, data);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al actualizar usuario'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.only(bottom: 20, left: 20, right: 20),
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+      return;
+    }
+
+    final data = {
+      "nombre": nombreController.text.trim(),
+      "apellidos": apellidosController.text.trim(),
+      "correo": email,
+      "ciudad": _selectedDepartamento!,
+      "pais": _selectedCountry,
+      "celular": phone,
+    };
+    if (contrasenaController.text.isNotEmpty) {
+      data['contrasena'] = contrasenaController.text;
+    }
+
+    setState(() => _isLoading = true);
+    final exito = await UsuarioService().actualizarUsuario(widget.usuario['id'], data);
+    setState(() => _isLoading = false);
+
+    if (exito) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Datos actualizados con éxito'), backgroundColor: Colors.green),
+      );
+      await Future.delayed(Duration(milliseconds: 500));
+      Navigator.pop(context, data);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al actualizar usuario'), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -95,9 +102,10 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
     TextEditingController controller,
     String hintText, {
     bool obscureText = false,
-    bool required = true,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
+    bool required = true,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
@@ -105,16 +113,7 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: const Color(0xFFE0E0E0),
-          hintText: hintText,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        ),
+        inputFormatters: inputFormatters,
         validator: validator ??
             (value) {
               if (required && (value == null || value.isEmpty)) {
@@ -122,6 +121,49 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
               }
               return null;
             },
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Color(0xFFE0E0E0),
+          hintText: hintText,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide.none),
+          contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFixedCountryDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: DropdownButtonFormField<String>(
+        value: _selectedCountry,
+        items: [DropdownMenuItem(value: 'Perú', child: Text('Perú'))],
+        onChanged: null,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Color(0xFFE0E0E0),
+          hintText: 'País',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide.none),
+          contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDepartamentoDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: DropdownButtonFormField<String>(
+        value: _selectedDepartamento,
+        items: _departamentosPeru.map((dep) => DropdownMenuItem(value: dep, child: Text(dep))).toList(),
+        onChanged: (value) => setState(() => _selectedDepartamento = value),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Color(0xFFE0E0E0),
+          hintText: 'Departamento',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide.none),
+          contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        ),
       ),
     );
   }
@@ -140,32 +182,41 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset('assets/tabler_spy.png', width: 24),
-            const SizedBox(width: 8),
-            const Text(
-              'Editar Perfil',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-            ),
+            SizedBox(width: 8),
+            Text('Editar Perfil', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ],
         ),
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: Colors.black),
       ),
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(horizontal: 24),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     children: [
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildTextField(nombreController, 'Nombre'),
                       _buildTextField(apellidosController, 'Apellidos'),
-                      _buildTextField(correoController, 'Correo', keyboardType: TextInputType.emailAddress),
-                      _buildTextField(ciudadController, 'Departamento'),
-                      _buildTextField(paisController, 'País'),
-                      _buildTextField(celularController, 'Celular', keyboardType: TextInputType.phone),
+                      _buildTextField(
+                        correoController,
+                        'Correo',
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      _buildFixedCountryDropdown(),
+                      _buildDepartamentoDropdown(),
+                      _buildTextField(
+                        celularController,
+                        'Celular',
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(9),
+                        ],
+                      ),
                       _buildTextField(
                         contrasenaController,
                         'Nueva Contraseña',
@@ -178,34 +229,35 @@ class _EditarPerfilScreenState extends State<EditarPerfilScreen> {
                         obscureText: true,
                         required: false,
                         validator: (value) {
-                          if (contrasenaController.text.isNotEmpty && value != contrasenaController.text) {
+                          if (contrasenaController.text.isNotEmpty &&
+                              value != contrasenaController.text) {
                             return 'Las contraseñas no coinciden';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: _isLoading ? null : _guardarCambios,
                         style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 48),
+                          minimumSize: Size(double.infinity, 48),
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('Guardar Cambios', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text('Guardar Cambios', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                     ],
                   ),
                 ),
               ),
             ),
             if (!isKeyboardOpen)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   'Revisa bien tus datos antes de guardar.',
                   style: TextStyle(fontSize: 12, color: Colors.grey),

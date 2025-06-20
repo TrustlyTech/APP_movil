@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../models/requisitoriado.dart';
 import '../../services/requisitoriado_service.dart';
+import '../widgets/ayuda_dialog.dart';
 
 class RequisitoriadosScreen extends StatefulWidget {
   @override
@@ -45,6 +46,22 @@ class _RequisitoriadosScreenState extends State<RequisitoriadosScreen> {
     }
   }
 
+  void _mostrarAyuda() {
+    AyudaDialog.mostrar(
+      context: context,
+      titulo: 'Ayuda - Lista de Buscados',
+      mensaje: '''
+En esta pantalla puedes visualizar la lista de personas buscadas según el Programa de Recompensas del Mininter.
+
+• Usa el campo de búsqueda para filtrar por nombre.
+
+• Cada resultado muestra el nombre del requisitoriado y la recompensa asociada.
+
+• Navega entre páginas deslizando horizontalmente o usando los puntos inferiores.
+''',
+    );
+  }
+
   Widget _buildDotIndicator() {
     int visibleDots = 5;
     int start = 0;
@@ -85,7 +102,6 @@ class _RequisitoriadosScreenState extends State<RequisitoriadosScreen> {
       return Center(child: Text('No se encontraron resultados'));
     }
 
-    // Mostrar máximo 4 requisitoriados por página
     final maxItems = 4;
     final visibles = requisitoriados.length > maxItems
         ? requisitoriados.sublist(0, maxItems)
@@ -160,19 +176,28 @@ class _RequisitoriadosScreenState extends State<RequisitoriadosScreen> {
         backgroundColor: Colors.white,
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/tabler_spy.png', width: 30),
-              SizedBox(width: 10),
-              Text('Lista de Buscados', style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          centerTitle: true,
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           elevation: 0.5,
           leading: BackButton(),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Image.asset('assets/tabler_spy.png', width: 30),
+                  SizedBox(width: 10),
+                  Text('Lista de Buscados',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              IconButton(
+                icon: Icon(Icons.help_outline, color: Colors.black),
+                tooltip: '¿Qué hay en esta pantalla?',
+                onPressed: _mostrarAyuda,
+              ),
+            ],
+          ),
         ),
         body: SafeArea(
           child: GestureDetector(
@@ -188,7 +213,8 @@ class _RequisitoriadosScreenState extends State<RequisitoriadosScreen> {
                       hintText: 'Buscar por nombre...',
                       filled: true,
                       fillColor: Color(0xFFE0E0E0),
-                      contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 16, horizontal: 12),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide.none,
@@ -226,8 +252,8 @@ class _RequisitoriadosScreenState extends State<RequisitoriadosScreen> {
                             if (!cache.containsKey(key)) {
                               return Center(
                                 child: loading
-                                  ? CircularProgressIndicator()
-                                  : Text('Sin resultados'),
+                                    ? CircularProgressIndicator()
+                                    : Text('Sin resultados'),
                               );
                             }
 

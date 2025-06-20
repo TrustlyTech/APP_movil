@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/notificacion.dart';
 import '../../services/notificacion_service.dart';
+import '../widgets/ayuda_dialog.dart';
 
 class NotificacionesScreen extends StatefulWidget {
   final int usuarioId;
@@ -45,6 +46,22 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
     }
   }
 
+  void _mostrarAyuda() {
+    AyudaDialog.mostrar(
+      context: context,
+      titulo: 'Ayuda - Notificaciones',
+      mensaje: '''
+En esta pantalla puedes visualizar todas las notificaciones asociadas a tu cuenta.
+
+• Cada notificación contiene el tipo y el mensaje relacionado.
+
+• Puedes eliminar una notificación individual tocando el ícono rojo de la papelera.
+
+• Si deseas eliminar todas las notificaciones, utiliza el ícono de papelera roja en la parte superior derecha.
+''',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -70,8 +87,14 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
           leading: BackButton(color: Colors.black),
           actions: [
             IconButton(
+              icon: Icon(Icons.help_outline, color: Colors.black),
+              onPressed: _mostrarAyuda,
+              tooltip: 'Ayuda',
+            ),
+            IconButton(
               icon: Icon(Icons.delete_forever, color: Colors.red),
               onPressed: _confirmarEliminarTodo,
+              tooltip: 'Eliminar todas',
             ),
           ],
         ),
@@ -143,4 +166,3 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
     );
   }
 }
-
