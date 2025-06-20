@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import '../../services/auth_service.dart';
-import '../../views/screens/face_verification_screen.dart';  // Ajusta el path según tu proyecto
+import '../../views/screens/face_verification_screen.dart';
+import '../widgets/PoliticaPrivacidadWidget.dart';
+import '../widgets/TerminosCondicionesWidget.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -134,17 +137,36 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Center(
                     child: Text.rich(
                       TextSpan(
-                        text: 'By signing up, you agree to our ',
-                        style: TextStyle(fontSize: 12),
+                        text: 'Al registrarte, aceptas nuestros ',
+                        style: TextStyle(fontSize: 12, color: Colors.black87),
                         children: [
                           TextSpan(
-                            text: 'T&Cs',
-                            style: TextStyle(color: Colors.blue),
+                            text: 'Términos y Condiciones',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => TerminosCondicionesWidget()),
+                                );
+                              },
                           ),
-                          TextSpan(text: ' and '),
+                          TextSpan(text: ' y nuestra '),
                           TextSpan(
-                            text: 'Privacy Policy.',
-                            style: TextStyle(color: Colors.blue),
+                            text: 'Política de Privacidad.',
+                            style: TextStyle(
+                              color: Colors.blue,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => PoliticaPrivacidadWidget()),
+                                );
+                              },
                           ),
                         ],
                       ),

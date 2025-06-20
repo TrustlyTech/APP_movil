@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart'; // Para usar TextInputFormatter
 import '../../services/auth_service.dart';
+import '../widgets/PoliticaPrivacidadWidget.dart';
+import '../widgets/TerminosCondicionesWidget.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -111,23 +114,48 @@ Widget build(BuildContext context) {
           ),
 
           if (!isKeyboardOpen)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Center(
-                child: Text.rich(
-                  TextSpan(
-                    text: 'By signing up, you agree to our ',
-                    style: TextStyle(fontSize: 12),
-                    children: [
-                      TextSpan(text: 'T&Cs', style: TextStyle(color: Colors.blue)),
-                      TextSpan(text: ' and '),
-                      TextSpan(text: 'Privacy Policy.', style: TextStyle(color: Colors.blue)),
-                    ],
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Center(
+                    child: Text.rich(
+                      TextSpan(
+                        text: 'Al registrarte, aceptas nuestros ',
+                        style: TextStyle(fontSize: 12, color: Colors.black87),
+                        children: [
+                          TextSpan(
+                            text: 'Términos y Condiciones',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => TerminosCondicionesWidget()),
+                                );
+                              },
+                          ),
+                          TextSpan(text: ' y nuestra '),
+                          TextSpan(
+                            text: 'Política de Privacidad.',
+                            style: TextStyle(
+                              color: Colors.blue,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => PoliticaPrivacidadWidget()),
+                                );
+                              },
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-            ),
         ],
       ),
     ),
