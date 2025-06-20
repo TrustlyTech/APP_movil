@@ -15,7 +15,7 @@ class AuthService {
   // Getter público
   Map<String, dynamic>? get usuarioAutenticado => _usuarioAutenticado;
 
-  // Setter (opcional si necesitas modificar manualmente desde otros lados)
+  // Setter (opcional)
   set usuarioAutenticado(Map<String, dynamic>? usuario) {
     _usuarioAutenticado = usuario;
   }
@@ -63,7 +63,7 @@ class AuthService {
     }
   }
 
-  // Login de usuario y obtención de perfil completo desde la respuesta
+  // Login de usuario y guarda el perfil
   Future<Map<String, dynamic>> loginUser({
     required String correo,
     required String contrasena,
@@ -92,6 +92,27 @@ class AuthService {
       }
     } catch (e) {
       throw Exception('Error en login: $e');
+    }
+  }
+
+  // Obtener usuario por ID y actualizar el estado actual
+  Future<Map<String, dynamic>?> obtenerUsuarioPorId(int id) async {
+    final url = Uri.parse('$baseUrl/usuario/$id');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _usuarioAutenticado = data['usuario']; // Actualiza el usuario local
+        return _usuarioAutenticado;
+      } else {
+        print('Error al obtener usuario: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Excepción al obtener usuario: $e');
+      return null;
     }
   }
 
