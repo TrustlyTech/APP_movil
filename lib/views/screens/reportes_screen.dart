@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/reporte_model.dart';
 import '../../services/reporte_service.dart';
+import '../../services/denuncias_service.dart';
 import '../widgets/ayuda_dialog.dart';
+import '../widgets/ConfirmacionDenunciaDialog.dart';
 
 class ListaReportesScreen extends StatefulWidget {
   final int usuarioId;
@@ -16,6 +18,7 @@ class ListaReportesScreen extends StatefulWidget {
 class _ListaReportesScreenState extends State<ListaReportesScreen> {
   List<Reporte> _reportes = [];
   final _reporteService = ReporteService();
+  final _denunciasService = DenunciasService();
   bool _isLoading = true;
 
   @override
@@ -25,6 +28,9 @@ class _ListaReportesScreenState extends State<ListaReportesScreen> {
   }
 
   Future<void> _cargarReportes() async {
+    setState(() {
+      _isLoading = true;
+    });
     final reportes = await _reporteService.obtenerReportesPorUsuario(widget.usuarioId);
     setState(() {
       _reportes = reportes;
@@ -32,7 +38,7 @@ class _ListaReportesScreenState extends State<ListaReportesScreen> {
     });
   }
 
-  void _callHotline() async {
+  Future<void> _callHotline() async {
     final Uri hotlineUri = Uri.parse('tel:080040007');
     if (await canLaunchUrl(hotlineUri)) {
       await launchUrl(hotlineUri);
@@ -44,13 +50,61 @@ class _ListaReportesScreenState extends State<ListaReportesScreen> {
   }
 
   void _reportar(Reporte reporte) {
-    _callHotline();
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return ConfirmacionDenunciaDialog(
+          onConfirmar: () async {
+            Navigator.of(dialogContext).pop(); // Cierra el diálogo
+
+            final exitoDenuncia = await _denunciasService.denunciar(
+              widget.usuarioId,
+              reporte.requisitoriadoId,
+            );
+
+            if (exitoDenuncia) {
+              final exitoEliminacion = await _reporteService.eliminarReporte(reporte.id);
+
+              if (exitoEliminacion) {
+                // Actualiza la lista recargando datos del backend
+                await _cargarReportes();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Denuncia enviada y reporte eliminado'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+
+                await _callHotline();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Denuncia enviada pero no se pudo eliminar reporte'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+
+                await _callHotline();
+              }
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error al enviar denuncia'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+        );
+      },
+    );
   }
 
   void _eliminar(Reporte reporte) async {
     final exito = await _reporteService.eliminarReporte(reporte.id);
     if (exito) {
-      _cargarReportes();
+      await _cargarReportes();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Reporte eliminado')),
       );

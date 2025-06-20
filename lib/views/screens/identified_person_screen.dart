@@ -6,6 +6,7 @@ import '../../services/comparacion_service.dart';
 import '../../services/denuncias_service.dart';
 import '../../services/auth_service.dart';
 import 'confirmar_guardar_screen.dart';
+import '../widgets/ConfirmacionDenunciaDialog.dart';
 
 class IdentifiedPersonScreen extends StatelessWidget {
   final String name;
@@ -153,7 +154,16 @@ class IdentifiedPersonScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _reportarYLlamar(context),
+                onPressed: () {
+      showDialog(
+        context: context,
+        builder: (BuildContext dialogContext) {
+          return ConfirmacionDenunciaDialog(
+            onConfirmar: () => _reportarYLlamar(context),
+          );
+        },
+      );
+    },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
