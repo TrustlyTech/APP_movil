@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,8 @@ import 'profile_screen.dart';
 import 'reportes_screen.dart';
 import '../../services/auth_service.dart';
 import 'notificaciones_screen.dart';
+import '../widgets/SinCoincidenciaDialog.dart';
+import '../widgets/ayuda_dialog.dart';
 
 class FaceVerificationScreen extends StatefulWidget {
   @override
@@ -16,6 +19,8 @@ class FaceVerificationScreen extends StatefulWidget {
 class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
+  bool _isTakingPicture = false;
+  String? _capturedImagePath;
   final FaceVerificationController _controller = FaceVerificationController();
   FlashMode _flashMode = FlashMode.off;
 
@@ -35,12 +40,10 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
       if (cameras.isNotEmpty) {
         _cameraController = CameraController(cameras[0], ResolutionPreset.high);
         await _cameraController!.initialize();
-
         if (!mounted) return;
         setState(() {
           _isCameraInitialized = true;
         });
-
         await _cameraController!.setFlashMode(_flashMode);
       } else {
         print('No se encontraron cámaras disponibles');
@@ -48,6 +51,15 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     } catch (e) {
       print('Error al inicializar la cámara: $e');
     }
+  }
+
+  Future<void> _resetCameraPreview() async {
+    setState(() {
+      _capturedImagePath = null;
+      _isCameraInitialized = false;
+    });
+    await _cameraController?.dispose();
+    await _initializeCameraSafely();
   }
 
   Future<void> _setFlashMode(FlashMode mode) async {
@@ -69,13 +81,27 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
   }
 
   Future<void> _identify() async {
-    if (_cameraController != null && _cameraController!.value.isInitialized) {
+    if (_cameraController != null &&
+        _cameraController!.value.isInitialized &&
+        !_isTakingPicture) {
+      setState(() {
+        _isTakingPicture = true;
+        _capturedImagePath = null;
+      });
+
       try {
         XFile imageFile = await _cameraController!.takePicture();
-        Map<String, dynamic> response = await _controller.captureAndSendImage(imageFile);
 
-        if (response.containsKey('message') && response['message'] == "Coincidencia encontrada") {
-          Navigator.push(
+        setState(() {
+          _capturedImagePath = imageFile.path;
+        });
+
+        Map<String, dynamic> response =
+            await _controller.captureAndSendImage(imageFile);
+
+        if (response.containsKey('message') &&
+            response['message'] == "Coincidencia encontrada") {
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => IdentifiedPersonScreen(
@@ -87,26 +113,21 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
             ),
           );
         } else {
-          showDialog(
+          await showDialog(
             context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Sin Coincidencia'),
-                content: Text('La persona no se encuentra requisitoriada en el programa de recompensas del Mininter.'),
-                actions: [
-                  TextButton(
-                    child: Text('Aceptar'),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              );
-            },
+            builder: (BuildContext context) => const SinCoincidenciaDialog(),
           );
         }
+
+        await _resetCameraPreview();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
+      } finally {
+        setState(() {
+          _isTakingPicture = false;
+        });
       }
     }
   }
@@ -128,18 +149,23 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
         children: [
           _isCameraInitialized && _cameraController != null
               ? SizedBox.expand(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _cameraController!.value.previewSize!.height,
-                      height: _cameraController!.value.previewSize!.width,
-                      child: CameraPreview(_cameraController!),
-                    ),
-                  ),
+                  child: _capturedImagePath != null
+                      ? Image.file(
+                          File(_capturedImagePath!),
+                          fit: BoxFit.cover,
+                        )
+                      : FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _cameraController!.value.previewSize!.height,
+                            height: _cameraController!.value.previewSize!.width,
+                            child: CameraPreview(_cameraController!),
+                          ),
+                        ),
                 )
               : Center(child: CircularProgressIndicator()),
 
-          // Barra superior
+          // Barra superior con botón de ayuda
           Container(
             height: 100,
             color: Colors.white,
@@ -153,27 +179,47 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
                 Spacer(),
-                // Ícono de notificaciones
-      IconButton(
-        icon: Icon(Icons.notifications, color: Colors.black),
-        onPressed: () {
-          final usuario = AuthService().usuarioAutenticado;
-if (usuario != null && usuario['id'] != null) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => NotificacionesScreen(usuarioId: usuario['id']),
-    ),
-  );
-} else {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('Usuario no autenticado')),
-  );
-}
+                IconButton(
+                  icon: Icon(Icons.help_outline, color: Colors.black),
+                  tooltip: 'Ayuda',
+                  onPressed: () {
+                    AyudaDialog.mostrar(
+                      context: context,
+                      titulo: 'Ayuda de Verificación Facial',
+mensaje:
+  '🔎 Esta pantalla permite realizar una verificación facial utilizando inteligencia artificial para identificar posibles coincidencias con personas buscadas.\n\n'
+  '📸 cámara: Tócalo para capturar una foto. Asegúrate de que el rostro esté centrado, iluminado y sin obstrucciones (como gafas oscuras o gorras).\n\n'
+  '⚡ Icono de flash: Cambia entre modo apagado, automático y encendido para mejorar la iluminación al tomar la foto.\n\n'
+  '🔔 Icono de notificaciones: Muestra alertas relacionadas con reportes y resultados de tus verificaciones anteriores.\n\n'
+  '📋 Icono de reportes: Accede a tus reportes realizados y su estado.\n\n'
+  '📄 Botón de requisitoriados: Visualiza la lista de personas actualmente buscadas por las autoridades.\n\n'
+  '👤 Botón de perfil: Accede a tu perfil personal, donde puedes ver y editar tu información registrada.\n\n'
+  '✅ Si se detecta una coincidencia, se mostrará una pantalla con los detalles del sujeto (nombre, recompensa, nivel de coincidencia, etc.).\n\n'
+  '❌ Si no se detecta ninguna coincidencia, se mostrará un mensaje informativo.\n\n'
+  'ℹ️ Esta herramienta está destinada a colaborar con la seguridad ciudadana. Utilízala con responsabilidad.',
 
-        },
-      ),
-                // Ícono de lista de reportes
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.notifications, color: Colors.black),
+                  onPressed: () {
+                    final usuario = AuthService().usuarioAutenticado;
+                    if (usuario != null && usuario['id'] != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              NotificacionesScreen(usuarioId: usuario['id']),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Usuario no autenticado')),
+                      );
+                    }
+                  },
+                ),
                 IconButton(
                   icon: Icon(Icons.list, color: Colors.black),
                   onPressed: () {
@@ -182,7 +228,8 @@ if (usuario != null && usuario['id'] != null) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ListaReportesScreen(usuarioId: usuario['id']),
+                          builder: (context) =>
+                              ListaReportesScreen(usuarioId: usuario['id']),
                         ),
                       );
                     } else {
@@ -196,7 +243,7 @@ if (usuario != null && usuario['id'] != null) {
             ),
           ),
 
-          // Botón flash
+          // Botón de flash
           Positioned(
             top: 113,
             right: 20,
@@ -243,7 +290,7 @@ if (usuario != null && usuario['id'] != null) {
                   backgroundColor: Colors.red,
                   child: IconButton(
                     icon: Icon(Icons.camera_alt, color: Colors.white, size: 30),
-                    onPressed: _identify,
+                    onPressed: _isTakingPicture ? null : _identify,
                   ),
                 ),
                 _buildFloatingButton(
@@ -263,4 +310,3 @@ if (usuario != null && usuario['id'] != null) {
     );
   }
 }
-

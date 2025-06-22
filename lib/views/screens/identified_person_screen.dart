@@ -7,6 +7,7 @@ import '../../services/denuncias_service.dart';
 import '../../services/auth_service.dart';
 import 'confirmar_guardar_screen.dart';
 import '../widgets/ConfirmacionDenunciaDialog.dart';
+import '../widgets/ayuda_dialog.dart';
 
 class IdentifiedPersonScreen extends StatelessWidget {
   final String name;
@@ -35,8 +36,8 @@ class IdentifiedPersonScreen extends StatelessWidget {
       return;
     }
 
-    final requisitoriadoId = await ComparacionService()
-        .obtenerRequisitoriadoIdPorPersonId(personId);
+    final requisitoriadoId =
+        await ComparacionService().obtenerRequisitoriadoIdPorPersonId(personId);
 
     if (requisitoriadoId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,8 +69,8 @@ class IdentifiedPersonScreen extends StatelessWidget {
       return;
     }
 
-    final requisitoriadoId = await ComparacionService()
-        .obtenerRequisitoriadoIdPorPersonId(personId);
+    final requisitoriadoId =
+        await ComparacionService().obtenerRequisitoriadoIdPorPersonId(personId);
 
     if (requisitoriadoId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,12 +79,9 @@ class IdentifiedPersonScreen extends StatelessWidget {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            ConfirmarGuardarScreen(requisitoriadoId: requisitoriadoId),
-      ),
+    showDialog(
+      context: context,
+      builder: (_) => ConfirmarGuardarDialog(requisitoriadoId: requisitoriadoId),
     );
   }
 
@@ -94,11 +92,35 @@ class IdentifiedPersonScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text('Resultados', style: TextStyle(color: Colors.black)),
+        title: Row(
+          children: [
+            Image.asset('assets/tabler_spy.png', width: 28, height: 28),
+            SizedBox(width: 10),
+            Text('Resultados', style: TextStyle(color: Colors.black)),
+          ],
+        ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.help_outline, color: Colors.black),
+            onPressed: () {
+              AyudaDialog.mostrar(
+                context: context,
+                titulo: 'Ayuda de Resultados',
+                mensaje:
+                    'Esta pantalla muestra el resultado de la verificación facial.\n\n'
+                    '📸 Verás la imagen capturada y los datos de coincidencia con una persona requisitoriada.\n\n'
+                    '🔴 Usa el botón "Denunciar" si deseas alertar al Ministerio del Interior (Mininter).\n'
+                    '📞 También se te brindará la opción de llamar a la línea gratuita 0800-40007.\n\n'
+                    '💾 Usa el botón "Guardar" si deseas conservar este resultado para revisar más tarde.\n\n'
+                    '⚠️ Este sistema está orientado al apoyo ciudadano. Utilízalo con responsabilidad.',
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -112,8 +134,7 @@ class IdentifiedPersonScreen extends StatelessWidget {
               child: Column(
                 children: [
                   ClipRRect(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(12)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                     child: Image.file(
                       File(imagePath),
                       width: double.infinity,
@@ -155,15 +176,15 @@ class IdentifiedPersonScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-      showDialog(
-        context: context,
-        builder: (BuildContext dialogContext) {
-          return ConfirmacionDenunciaDialog(
-            onConfirmar: () => _reportarYLlamar(context),
-          );
-        },
-      );
-    },
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext dialogContext) {
+                      return ConfirmacionDenunciaDialog(
+                        onConfirmar: () => _reportarYLlamar(context),
+                      );
+                    },
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,

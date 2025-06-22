@@ -27,15 +27,13 @@ class LocalizacionEstadistica {
 }
 
 class TopRequisitoriado {
-  final int id;
   final String nombre;
   final int cantidad;
 
-  TopRequisitoriado({required this.id, required this.nombre, required this.cantidad});
+  TopRequisitoriado({required this.nombre, required this.cantidad});
 
   factory TopRequisitoriado.fromJson(Map<String, dynamic> json) {
     return TopRequisitoriado(
-      id: json['id'],
       nombre: json['nombre'],
       cantidad: json['cantidad'],
     );

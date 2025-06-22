@@ -15,6 +15,11 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
   List<LocalizacionEstadistica> _localizaciones = [];
   List<TopRequisitoriado> _topRequisitoriados = [];
 
+  String _intervaloSeleccionado = 'mes';
+  final List<String> _intervalos = ['mes', '6M', 'YTD', '1Y'];
+
+  final letras = ['A', 'B', 'C', 'D', 'E'];
+
   @override
   void initState() {
     super.initState();
@@ -22,8 +27,9 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
   }
 
   Future<void> cargarEstadisticas() async {
+    setState(() => _loading = true);
     try {
-      final denuncias = await EstadisticasService.getDenunciasPorPeriodo('mes');
+      final denuncias = await EstadisticasService.getDenunciasPorPeriodo(_intervaloSeleccionado);
       final localizaciones = await EstadisticasService.getEstadisticasLocalizacion('ciudad');
       final top = await EstadisticasService.getTopRequisitoriados();
 
@@ -63,10 +69,7 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
                     const Spacer(),
                     Image.asset('assets/tabler_spy.png', width: 30),
                     const SizedBox(width: 10),
-                    const Text(
-                      "Estadísticas",
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
+                    const Text("Estadísticas", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.help_outline, color: Colors.black),
@@ -74,20 +77,28 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
                         AyudaDialog.mostrar(
                           context: context,
                           titulo: 'Ayuda - Estadísticas',
-                          mensaje: '''
-En esta vista puedes ver un resumen gráfico de la actividad en Identity:
+mensaje: '''
+📈 Tendencia de Denuncias:  
+Observa cómo han evolucionado las denuncias a lo largo del tiempo. Puedes cambiar entre distintos periodos:
 
-📈 Denuncias por Mes:
-Muestra la evolución de la cantidad de denuncias registradas por mes. Útil para detectar patrones, picos o anomalías en la actividad.
+- Mes: últimos 30 días  
+- 6M: últimos 6 meses  
+- YTD (Year To Date): desde enero del año en curso hasta hoy  
+- 1Y: últimos 12 meses  
 
-📊 Denuncias por Departamento:
-Indica en qué regiones del país se han detectado más personas incluidas en el programa de recompensas. Útil para reconocer zonas críticas.
+El gráfico muestra tres puntos clave (inicio, mitad y final) para facilitar la interpretación.
 
-🥇 Top Requisitoriados:
-Muestra a las 5 personas más denunciadas por los usuarios a través de Identity. Esta sección destaca a los requisitoriados con mayor número de denuncias.
 
-Este apartado nos sirve para evaluar el impacto de la app y entender el comportamiento de las Denuncias.
-                          ''',
+📍 Denuncias por Departamento:
+Ranking de departamentos con mayor cantidad de denuncias reportadas por los usuarios.
+
+🥇 Requisitoriados más Denunciados:
+Lista de las personas con más denuncias. Clasificados de la letra A (más reportado) a la E (menos).
+
+ℹ️ Nota:
+Puedes cambiar el intervalo de tiempo para analizar diferentes tendencias en las estadísticas.
+''',
+
                         );
                       },
                     ),
@@ -103,120 +114,39 @@ Este apartado nos sirve para evaluar el impacto de la app y entender el comporta
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 20),
-                            Text('📈 Denuncias por Mes', style: Theme.of(context).textTheme.titleMedium),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              height: 200,
-                              child: LineChart(
-                                LineChartData(
-                                  minX: 0,
-                                  maxX: (_denuncias.length - 1).toDouble(),
-                                  titlesData: FlTitlesData(
-                                    bottomTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        reservedSize: 22,
-                                        getTitlesWidget: (value, _) {
-                                          int idx = value.toInt();
-                                          if (idx < 0 || idx >= _denuncias.length) return const SizedBox();
-                                          return Text(_denuncias[idx].periodo.split(' ')[0], style: const TextStyle(fontSize: 10));
-                                        },
-                                      ),
-                                    ),
-                                    leftTitles: AxisTitles(
-                                      sideTitles: SideTitles(showTitles: true, reservedSize: 32),
-                                    ),
-                                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                  ),
-                                  gridData: FlGridData(show: true, drawVerticalLine: false),
-                                  borderData: FlBorderData(show: true),
-                                  lineBarsData: [
-                                    LineChartBarData(
-                                      spots: _denuncias
-                                          .asMap()
-                                          .entries
-                                          .map((e) => FlSpot(e.key.toDouble(), e.value.cantidad.toDouble()))
-                                          .toList(),
-                                      isCurved: true,
-                                      dotData: FlDotData(show: true),
-                                      color: Colors.green,
-                                      barWidth: 3,
-                                    ),
-                                  ],
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('📈 Tendencia de Denuncias', style: Theme.of(context).textTheme.titleMedium),
+                                DropdownButton<String>(
+                                  value: _intervaloSeleccionado,
+                                  items: _intervalos.map((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _intervaloSeleccionado = value!;
+                                    });
+                                    cargarEstadisticas();
+                                  },
                                 ),
-                              ),
+                              ],
                             ),
+                            const SizedBox(height: 10),
+                            _buildLineaDenuncias(),
                             const SizedBox(height: 24),
                             Text('📊 Denuncias por Departamento', style: Theme.of(context).textTheme.titleMedium),
                             const SizedBox(height: 10),
-                            SizedBox(
-                              height: 200,
-                              child: BarChart(
-                                BarChartData(
-                                  barGroups: _localizaciones
-                                      .asMap()
-                                      .entries
-                                      .map((e) => BarChartGroupData(
-                                            x: e.key,
-                                            barRods: [
-                                              BarChartRodData(
-                                                toY: e.value.cantidad.toDouble(),
-                                                color: Colors.blue,
-                                                width: 16,
-                                              )
-                                            ],
-                                          ))
-                                      .toList(),
-                                  titlesData: FlTitlesData(
-                                    bottomTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        reservedSize: 22,
-                                        getTitlesWidget: (value, _) {
-                                          int idx = value.toInt();
-                                          if (idx < 0 || idx >= _localizaciones.length) return const SizedBox();
-                                          return Text(_localizaciones[idx].nombre, style: const TextStyle(fontSize: 10));
-                                        },
-                                      ),
-                                    ),
-                                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 32)),
-                                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                  ),
-                                  gridData: FlGridData(show: false),
-                                  borderData: FlBorderData(show: true),
-                                ),
-                              ),
-                            ),
+                            _buildBarrasLocalizacion(),
                             const SizedBox(height: 24),
                             Text('🥇 Top Requisitoriados', style: Theme.of(context).textTheme.titleMedium),
                             const SizedBox(height: 10),
-                            SizedBox(
-                              height: 200,
-                              child: PieChart(
-                                PieChartData(
-                                  sections: _topRequisitoriados
-                                      .asMap()
-                                      .entries
-                                      .map((e) {
-                                        final total = _topRequisitoriados.fold(0, (sum, item) => sum + item.cantidad);
-                                        final value = e.value.cantidad.toDouble();
-                                        final percent = (value / total) * 100;
-                                        return PieChartSectionData(
-                                          title: '${e.value.nombre}\n${percent.toStringAsFixed(1)}%',
-                                          value: value,
-                                          color: Colors.primaries[e.key % Colors.primaries.length],
-                                          radius: 60,
-                                          titleStyle: const TextStyle(color: Colors.white, fontSize: 10),
-                                        );
-                                      })
-                                      .toList(),
-                                  centerSpaceRadius: 40,
-                                  sectionsSpace: 2,
-                                ),
-                              ),
-                            ),
+                            _buildPieChartTop(),
+                            const SizedBox(height: 16),
+                            _buildLeyendaTop(),
                           ],
                         ),
                 ),
@@ -236,6 +166,200 @@ Este apartado nos sirve para evaluar el impacto de la app y entender el comporta
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLineaDenuncias() {
+  if (_denuncias.isEmpty) return const SizedBox();
+
+  final datos = [..._denuncias];
+
+  String formatearFecha(String fecha) {
+    final dt = DateTime.tryParse(fecha);
+    if (dt == null) return '';
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+    switch (_intervaloSeleccionado) {
+      case 'mes':
+      case '6M':
+        return '${dt.day} ${meses[dt.month - 1]}';
+      case 'YTD':
+      case '1Y':
+        return '${meses[dt.month - 1]} ${dt.year}';
+      default:
+        return '${dt.month}/${dt.year}';
+    }
+  }
+
+  final puntos = datos
+      .asMap()
+      .entries
+      .map((e) => FlSpot(e.key.toDouble(), e.value.cantidad.toDouble()))
+      .toList();
+
+  final maxY = datos.map((d) => d.cantidad.toDouble()).reduce((a, b) => a > b ? a : b) * 1.1;
+
+  // Eje X: solo 3 etiquetas únicas (inicio, medio, final)
+  final total = datos.length;
+  final posiciones = <int>[0, total ~/ 2, total - 1];
+  final etiquetasUnicas = <String>{};
+  final Map<int, String> posicionesConEtiqueta = {};
+
+  for (int idx in posiciones) {
+    final texto = formatearFecha(datos[idx].periodo);
+    if (!etiquetasUnicas.contains(texto)) {
+      posicionesConEtiqueta[idx] = texto;
+      etiquetasUnicas.add(texto);
+    }
+  }
+
+  Widget bottomTitleWidgets(double value, TitleMeta meta) {
+    final idx = value.toInt();
+    if (posicionesConEtiqueta.containsKey(idx)) {
+      return SideTitleWidget(
+        meta: meta,
+        child: Text(posicionesConEtiqueta[idx]!, style: const TextStyle(fontSize: 10)),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget leftTitleWidgets(double value, TitleMeta meta) {
+    return SideTitleWidget(
+      meta: meta,
+      child: Text(value.round().toString(), style: const TextStyle(fontSize: 10)),
+    );
+  }
+
+  return SizedBox(
+    height: 200,
+    child: LineChart(
+      LineChartData(
+        minX: 0,
+        maxX: (datos.length - 1).toDouble(),
+        minY: 0,
+        maxY: maxY,
+        gridData: FlGridData(show: true, drawVerticalLine: false),
+        borderData: FlBorderData(show: true),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 26,
+              interval: 1,
+              getTitlesWidget: bottomTitleWidgets,
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 32,
+              interval: 1,
+              getTitlesWidget: leftTitleWidgets,
+            ),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: puntos,
+            isCurved: true,
+            dotData: FlDotData(show: true),
+            color: Colors.green,
+            barWidth: 3,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+
+
+
+  Widget _buildBarrasLocalizacion() {
+    List<LocalizacionEstadistica> top5 = [..._localizaciones];
+    top5.sort((a, b) => b.cantidad.compareTo(a.cantidad));
+    top5 = top5.take(5).toList();
+
+    return SizedBox(
+      height: 200,
+      child: BarChart(
+        BarChartData(
+          barGroups: top5
+              .asMap()
+              .entries
+              .map((e) => BarChartGroupData(
+                    x: e.key,
+                    barRods: [
+                      BarChartRodData(
+                        toY: e.value.cantidad.toDouble(),
+                        color: Colors.blue,
+                        width: 16,
+                      )
+                    ],
+                  ))
+              .toList(),
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 22,
+                getTitlesWidget: (value, _) {
+                  int idx = value.toInt();
+                  if (idx < 0 || idx >= top5.length) return const SizedBox();
+                  return Text(top5[idx].nombre, style: const TextStyle(fontSize: 10));
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 32)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          gridData: FlGridData(show: false),
+          borderData: FlBorderData(show: true),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPieChartTop() {
+    return SizedBox(
+      height: 200,
+      child: PieChart(
+        PieChartData(
+          sections: _topRequisitoriados.asMap().entries.map((e) {
+            final total = _topRequisitoriados.fold(0, (sum, item) => sum + item.cantidad);
+            final value = e.value.cantidad.toDouble();
+            final letra = letras[e.key];
+            return PieChartSectionData(
+              title: letra,
+              value: value,
+              color: Colors.primaries[e.key % Colors.primaries.length],
+              radius: 60,
+              titleStyle: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+            );
+          }).toList(),
+          centerSpaceRadius: 40,
+          sectionsSpace: 2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeyendaTop() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: _topRequisitoriados.asMap().entries.map((e) {
+        final letra = letras[e.key];
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2.0),
+          child: Text('🔹 $letra: ${e.value.nombre} (${e.value.cantidad})'),
+        );
+      }).toList(),
     );
   }
 }

@@ -124,4 +124,44 @@ class AuthService {
     // final prefs = await SharedPreferences.getInstance();
     // await prefs.clear();
   }
+    // Verificar correo + celular para recuperación
+  Future<Map<String, dynamic>> verificarUsuarioRecuperacion(String correo, String celular) async {
+    final url = Uri.parse('$baseUrl/verificar-usuario-recuperacion');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'correo': correo,
+          'celular': celular,
+        }),
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Error al verificar usuario: $e');
+    }
+  }
+
+  // Restablecer contraseña directamente
+  Future<Map<String, dynamic>> restablecerContrasenaDirecto(int usuarioId, String nuevaContrasena) async {
+    final url = Uri.parse('$baseUrl/restablecer-contrasena-directo');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'usuario_id': usuarioId,
+          'nueva_contrasena': nuevaContrasena,
+        }),
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Error al restablecer contraseña: $e');
+    }
+  }
+
 }

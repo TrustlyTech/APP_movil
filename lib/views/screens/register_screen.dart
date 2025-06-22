@@ -112,50 +112,56 @@ Widget build(BuildContext context) {
               ),
             ),
           ),
+                if (!isKeyboardOpen)
+  Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        RichText(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            text: 'Al registrarte, aceptas nuestros ',
+            style: TextStyle(fontSize: 12, color: Colors.black87),
+            children: [
+              TextSpan(
+                text: 'Términos y Condiciones',
+                style: TextStyle(color: Colors.blue),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => TerminosCondicionesWidget()),
+                    );
+                  },
+              ),
+            ],
+          ),
+        ),
+        RichText(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            text: 'y nuestra ',
+            style: TextStyle(fontSize: 12, color: Colors.black87),
+            children: [
+              TextSpan(
+                text: 'Política de Privacidad.',
+                style: TextStyle(color: Colors.blue),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => PoliticaPrivacidadWidget()),
+                    );
+                  },
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  ),
 
-          if (!isKeyboardOpen)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Center(
-                    child: Text.rich(
-                      TextSpan(
-                        text: 'Al registrarte, aceptas nuestros ',
-                        style: TextStyle(fontSize: 12, color: Colors.black87),
-                        children: [
-                          TextSpan(
-                            text: 'Términos y Condiciones',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => TerminosCondicionesWidget()),
-                                );
-                              },
-                          ),
-                          TextSpan(text: ' y nuestra '),
-                          TextSpan(
-                            text: 'Política de Privacidad.',
-                            style: TextStyle(
-                              color: Colors.blue,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => PoliticaPrivacidadWidget()),
-                                );
-                              },
-                          ),
-                        ],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
         ],
       ),
     ),
@@ -245,58 +251,70 @@ Widget build(BuildContext context) {
   }
 
   Future<void> _onRegisterPressed() async {
-    final email = _emailController.text.trim();
-    final phone = _phoneController.text.trim();
-    final emailValid = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email);
-    final phoneValid = RegExp(r"^9\d{8}$").hasMatch(phone);
+  final email = _emailController.text.trim();
+  final phone = _phoneController.text.trim();
+  final emailValid = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email);
+  final phoneValid = RegExp(r"^9\d{8}$").hasMatch(phone);
 
-    if (_nameController.text.trim().isEmpty ||
-        _lastNameController.text.trim().isEmpty ||
-        email.isEmpty ||
-        !emailValid ||
-        _passwordController.text.trim().isEmpty ||
-        _selectedDepartamento == null ||
-        phone.isEmpty ||
-        !phoneValid) {
-      String errorMessage = 'Por favor, completa todos los campos';
-      if (!emailValid) errorMessage = 'Por favor, ingresa un correo válido';
-      if (!phoneValid) errorMessage = 'Celular debe comenzar con 9 y tener 9 dígitos';
+  if (_nameController.text.trim().isEmpty ||
+      _lastNameController.text.trim().isEmpty ||
+      email.isEmpty ||
+      !emailValid ||
+      _passwordController.text.trim().isEmpty ||
+      _selectedDepartamento == null ||
+      phone.isEmpty ||
+      !phoneValid) {
+    String errorMessage = 'Por favor, completa todos los campos';
+    if (!emailValid) errorMessage = 'Por favor, ingresa un correo válido';
+    if (!phoneValid) errorMessage = 'Celular debe comenzar con 9 y tener 9 dígitos';
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final registerResult = await authService.registerUser(
-        nombre: _nameController.text.trim(),
-        apellidos: _lastNameController.text.trim(),
-        correo: email,
-        contrasena: _passwordController.text.trim(),
-        ciudad: _selectedDepartamento!,
-        pais: _selectedCountry,
-        celular: phone,
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(registerResult['mensaje'] ?? 'Registro exitoso')),
-      );
-
-      await authService.loginUser(
-        correo: email,
-        contrasena: _passwordController.text.trim(),
-      );
-
-      Navigator.pushReplacementNamed(context, '/login');
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(errorMessage),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
   }
+
+  setState(() => _isLoading = true);
+
+  try {
+    final registerResult = await authService.registerUser(
+      nombre: _nameController.text.trim(),
+      apellidos: _lastNameController.text.trim(),
+      correo: email,
+      contrasena: _passwordController.text.trim(),
+      ciudad: _selectedDepartamento!,
+      pais: _selectedCountry,
+      celular: phone,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(registerResult['mensaje'] ?? 'Registro exitoso'),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    await authService.loginUser(
+      correo: email,
+      contrasena: _passwordController.text.trim(),
+    );
+
+    Navigator.pushReplacementNamed(context, '/login');
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(e.toString().replaceAll('Exception: ', '')),
+        backgroundColor: Colors.red,
+      ),
+    );
+  } finally {
+    setState(() => _isLoading = false);
+  }
+}
+
 
   @override
   void dispose() {

@@ -27,11 +27,16 @@ class AyudaDialog {
             ),
           ],
         ),
-        content: Text(
-          mensaje,
-          style: TextStyle(
-            fontSize: 15,
-            color: Colors.black87,
+        content: SizedBox(
+          height: 300, // Altura fija del área de contenido
+          child: SingleChildScrollView(
+            child: Text(
+              mensaje,
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.black87,
+              ),
+            ),
           ),
         ),
         actions: [
