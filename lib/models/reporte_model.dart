@@ -31,3 +31,4 @@ class Reporte {
     return base64Decode(base64Str);
   }
 }
+#model report
